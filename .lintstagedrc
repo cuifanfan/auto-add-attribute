@@ -1,0 +1,5 @@
+{
+  "src/**/*.{vue}": [
+    "node auto-add-attribute.js"
+  ]
+}

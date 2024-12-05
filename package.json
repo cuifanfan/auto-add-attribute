@@ -1,0 +1,39 @@
+{
+  "name": "id-plugin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky install",
+    "pre-commit": "lint-staged -e -V",
+    "commit": "git-cz",
+    "commitlint": "commitlint --config commitlint.config.js -e -V"
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-customizable"
+    },
+    "cz-customizable": {
+      "config": ".cz-config.js"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "commitizen": "^4.3.1",
+    "commitlint-config-cz": "^0.13.3",
+    "cz-conventional-changelog": "^3.3.0",
+    "cz-customizable": "^7.2.1",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.2.10"
+  },
+  "dependencies": {
+    "jsdom": "^25.0.1",
+    "log4js": "^6.9.1",
+    "vue-template-compiler": "^2.7.16"
+  }
+}

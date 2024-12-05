@@ -1,0 +1,9 @@
+{
+    "type": "vue",
+    "attribute": "id",
+    "path": "./src",
+    "logs": {
+        "size": 1048576,
+        "path": "./logs/"
+    }
+}
