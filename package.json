@@ -1,5 +1,5 @@
 {
-  "name": "id-plugin",
+  "name": "auto-add-attribute",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,6 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky install",
     "pre-commit": "lint-staged -e -V",
+    "add-attribute": "node auto-add-attribute.js",
+    "lint": "eslint . --fix",
+    "format": "prettier --write .",
     "commit": "git-cz",
     "commitlint": "commitlint --config commitlint.config.js -e -V"
   },
@@ -28,12 +31,21 @@
     "commitlint-config-cz": "^0.13.3",
     "cz-conventional-changelog": "^3.3.0",
     "cz-customizable": "^7.2.1",
+    "eslint-config-node": "^4.1.0",
     "husky": "^8.0.0",
     "lint-staged": "^15.2.10"
   },
   "dependencies": {
+    "@eslint/js": "^9.16.0",
+    "@vue/eslint-config-prettier": "^10.1.0",
+    "cheerio": "^1.0.0",
+    "eslint": "^9.16.0",
+    "eslint-plugin-header": "^3.1.1",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-vue": "^9.32.0",
     "jsdom": "^25.0.1",
     "log4js": "^6.9.1",
+    "prettier": "^3.4.2",
     "vue-template-compiler": "^2.7.16"
   }
 }

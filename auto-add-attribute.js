@@ -2,15 +2,14 @@
  * @Author: cuifan cuifan@isv-tech.com
  * @Date: 2024-12-04 09:03:09
  * @LastEditors: cuifan cuifan@isv-tech.com
- * @LastEditTime: 2024-12-05 14:36:03
+ * @LastEditTime: 2024-12-05 20:05:20
  * @FilePath: auto-add-attribute.js
  * @Description: 这是默认设置,可以在设置》工具》File Description中进行配置
  */
 
-
 const fs = require('fs');
 const parser = require('vue-template-compiler');
-const {JSDOM} = require('jsdom');
+const { JSDOM } = require('jsdom');
 const path = require('path');
 const log4js = require('log4js');
 
@@ -33,64 +32,21 @@ log4js.configure({
                 type: 'pattern',
                 // 配置模式
                 // pattern: '{"date":"%d","level":"%p","category":"%c","host":"%h","pid":"%z","data":\'%m\'}'
-                pattern: '%d %p %m'
+                pattern: '%d %p %m',
             },
             // 日志文件按日期（天）切割
             pattern: 'yyyy-MM-dd',
             // 回滚旧的日志文件时，保证以 .log 结尾 （只有在 alwaysIncludePattern 为 false 生效）
             keepFileExt: true,
             // 输出的日志文件名是都始终包含 pattern 日期结尾
-            alwaysIncludePattern: true
+            alwaysIncludePattern: true,
         },
     },
     categories: {
         // 设置默认的 categories
-        default: {appenders: ['cheese'], level: 'debug'},
-    }
+        default: { appenders: ['cheese'], level: 'debug' },
+    },
 });
-
-function autoAddAttribute() {
-    try {
-        // 日志满的话，删除一半
-        checkLogFull(config.logs, clearHalfFolder);
-        
-        dfsFile(path.join(__dirname, config.path), config.type, (filePath, source) => {
-            const start = Date.now();
-            const fileName = path.parse(filePath).name;
-            const descriptor = parser.parseComponent(source, {pad: true});
-            if (descriptor.template) {
-                descriptor.template.content = addIdToElements(descriptor.template.content, config.attribute, fileName);
-                const templateRegex = /<template\s*[^>]*>[\s\S]*<\/template>/;
-                const generatedSource = source.replace(templateRegex, `<template>\n${descriptor.template.content}\n</template>`);
-                fs.writeFileSync(filePath, generatedSource);
-            }
-            const duration = Date.now() - start;
-            console.log(`${filePath.replace(__dirname, '').replaceAll('\\', '/')} Finished ${duration}ms`);
-        });
-    } catch (e) {
-        logger.error(e);
-    }
-}
-
-autoAddAttribute();
-
-
-/**
- * @description 检查日志是否已满
- * @param {Object} logConfig 日志配置
- * @param {Function} handler 回调（路径）
- */
-function checkLogFull(logConfig, handler) {
-    
-    const logPath = logConfig.path;
-    const logLimitSize = logConfig.size;
-    const logSize = getFolderSize(logPath, (err) => logger.error(err));
-    if (logSize > logLimitSize) {
-        console.log('💄', new Date(), ' Logs has reached the limit, clearing half of......');
-        handler && handler(logPath);
-        console.log('✅ ', new Date(), ' Logs cleaned up.');
-    }
-}
 
 /**
  * @description 获取文件夹大小
@@ -102,7 +58,7 @@ function getFolderSize(folderPath, errHandler) {
     let totalSize = 0;
     try {
         const fileNames = fs.readdirSync(folderPath);
-        fileNames.forEach(fileName => {
+        fileNames.forEach((fileName) => {
             const filePath = path.join(folderPath, fileName);
             totalSize += fs.statSync(filePath).size;
         });
@@ -110,6 +66,22 @@ function getFolderSize(folderPath, errHandler) {
         errHandler && errHandler(err);
     }
     return totalSize;
+}
+
+/**
+ * @description 检查日志是否已满
+ * @param {Object} logConfig 日志配置
+ * @param {Function} handler 回调（路径）
+ */
+function checkLogFull(logConfig, handler) {
+    const logPath = logConfig.path;
+    const logLimitSize = logConfig.size;
+    const logSize = getFolderSize(logPath, (err) => logger.error(err));
+    if (logSize > logLimitSize) {
+        console.log('💄', new Date(), ' Logs has reached the limit, clearing half of......');
+        handler && handler(logPath);
+        console.log('✅ ', new Date(), ' Logs cleaned up.');
+    }
 }
 
 /**
@@ -122,7 +94,7 @@ function clearHalfFolder(folderPath, errHandler) {
         const fileNames = fs.readdirSync(folderPath);
         // 每次删除一半
         const halfFileNames = fileNames.slice(0, Math.floor(fileNames.length / 2));
-        halfFileNames.forEach(fileName => {
+        halfFileNames.forEach((fileName) => {
             const filePath = path.join(folderPath, fileName);
             fs.unlinkSync(filePath);
         });
@@ -146,7 +118,7 @@ function dfsFile(filePath, extendName, handler) {
         }
     } else {
         const fileNames = fs.readdirSync(filePath);
-        fileNames.forEach(name => {
+        fileNames.forEach((name) => {
             dfsFile(path.join(filePath, name), extendName, handler);
         });
     }
@@ -187,10 +159,12 @@ function getVForKey(vForNodes) {
  * */
 function handleVForNode(element) {
     if (element.hasAttribute('v-for')) {
-        const vForNodeList = isTemlateNode(element) ? element.content.querySelectorAll('*') : element.querySelectorAll('*');
+        const vForNodeList = isTemlateNode(element)
+            ? element.content.querySelectorAll('*')
+            : element.querySelectorAll('*');
         const vForNodes = [element, ...vForNodeList];
         const key = getVForKey(vForNodes);
-        vForNodes.forEach(vForNode => {
+        vForNodes.forEach((vForNode) => {
             if (!isTemlateNode(vForNode)) {
                 vForNode.vFor = key;
             }
@@ -204,9 +178,10 @@ function handleVForNode(element) {
  * @return {Array} nodeList 子节点数组
  * */
 function getAllChildNodes(root) {
+    const nodeList = [];
     const dfsTemplate = (node) => {
         const elements = node.querySelectorAll('*');
-        elements.forEach(element => {
+        elements.forEach((element) => {
             // 处理v-for节点
             handleVForNode(element);
             if (isTemlateNode(element)) {
@@ -216,7 +191,6 @@ function getAllChildNodes(root) {
             }
         });
     };
-    const nodeList = [];
     dfsTemplate(root);
     return nodeList;
 }
@@ -228,8 +202,64 @@ function getAllChildNodes(root) {
  * */
 function isStandardHTMLTag(tagName = '') {
     // 定义常见的 HTML 标签名列表
-    const htmlTagPattern = /^(?:a|abbr|address|area|article|aside|audio|b|base|bdi|bdo|blockquote|body|br|button|canvas|caption|cite|code|col|colgroup|data|datalist|dd|del|details|dfn|dialog|div|dl|dt|em|embed|fieldset|figcaption|figure|footer|form|h1|h2|h3|h4|h5|h6|head|header|hgroup|hr|html|i|iframe|img|input|ins|kbd|label|legend|li|link|autoAddAttribute|map|mark|meta|meter|nav|noscript|object|ol|optgroup|option|output|p|param|picture|pre|progress|q|rp|rt|ruby|s|samp|script|section|select|slot|small|source|span|strong|style|sub|summary|sup|table|tbody|td|template|textarea|tfoot|th|thead|time|title|tr|track|u|ul|var|video|wbr)$/i;
+    const htmlTagPattern =
+        /^(?:a|abbr|address|area|article|aside|audio|b|base|bdi|bdo|blockquote|body|br|button|canvas|caption|cite|code|col|colgroup|data|datalist|dd|del|details|dfn|dialog|div|dl|dt|em|embed|fieldset|figcaption|figure|footer|form|h1|h2|h3|h4|h5|h6|head|header|hgroup|hr|html|i|iframe|img|input|ins|kbd|label|legend|li|link|autoAddAttribute|map|mark|meta|meter|nav|noscript|object|ol|optgroup|option|output|p|param|picture|pre|progress|q|rp|rt|ruby|s|samp|script|section|select|slot|small|source|span|strong|style|sub|summary|sup|table|tbody|td|template|textarea|tfoot|th|thead|time|title|tr|track|u|ul|var|video|wbr)$/i;
     return htmlTagPattern.test(tagName.toLowerCase());
+}
+
+/**
+ * @description 处理Template 自定义组件大写不符合DOM规范被JSDOM转为小写问题
+ * @param {String} originalHtml 源代码
+ * @param {String} processedHtml JSDOM处理过的代码
+ * @return {Boolean}
+ * */
+function preserveTagCase(originalHtml, processedHtml) {
+    // 创建映射表，记录原始 HTML 中标签的大小写
+    const tagMap = new Map();
+    // 匹配开始标签、结束标签和自闭合标签
+    originalHtml.replace(/<([A-Za-z0-9-]+)[^>]*\/?>/g, (match, openTag) => {
+        if (!isStandardHTMLTag(openTag)) {
+            tagMap.set(openTag.toLowerCase(), openTag);
+        }
+        return match;
+    });
+    let preservedHtml = processedHtml;
+    tagMap.forEach((originTag, lowerTag) => {
+        preservedHtml = preservedHtml.replaceAll(lowerTag, originTag);
+    });
+    return preservedHtml;
+}
+
+/**
+ * @description 从指定DOM 数组中获取起始属性
+ * @param {Array} elements NodeList
+ * @param {String} identifier 自增属性标识符
+ * @param {String} attribute 属性名
+ * @return {Number} idCounter 自增起始属性值
+ * */
+function getStartIDFromElements(elements, identifier = '', attribute = 'id') {
+    let idStartCounter = 0;
+    let keyStartCounter = 0;
+    elements.forEach((element) => {
+        const id = element.getAttribute(attribute)?.trim();
+        if (id && id.startsWith(identifier)) {
+            const idString = id.replace(identifier, '').trim();
+            const idCount = parseInt(idString);
+            if (!isNaN(idCount)) {
+                idStartCounter = Math.max(idStartCounter, idCount);
+            }
+
+            const keyStringArray = idString.split(SPLIT_IDENTIFIER);
+            const keyCount = parseInt(keyStringArray[1]);
+            if (!isNaN(keyCount)) {
+                keyStartCounter = Math.max(keyStartCounter, keyCount);
+            }
+        }
+    });
+    return {
+        startID: idStartCounter + 1,
+        startKey: keyStartCounter + 1,
+    };
 }
 
 /**
@@ -243,57 +273,65 @@ function addIdToElements(htmlText, attribute = 'id', identifier) {
     const root = new JSDOM(htmlText);
     const body = root.window.document.body;
     const elements = getAllChildNodes(body);
-    let {startID, startKey} = getStartIDFromElements(elements, identifier, attribute);
-    
-    elements.forEach(element => {
+    let { startID, startKey } = getStartIDFromElements(elements, identifier, attribute);
+
+    elements.forEach((element) => {
         // 如果存在id和:id
         if (element.hasAttribute(attribute) || element.hasAttribute(`:${attribute}`)) {
             return;
         }
         // 被v-for的节点
-        if (element.hasOwnProperty('vFor')) {
+        if (Object.prototype.hasOwnProperty.call(element, 'vFor')) {
             if (element.getAttribute('vFor') === V_FOR_EMPTY_KEY) {
                 // 没有指定key
-                element.setAttribute(`:${attribute}`, `'${identifier}${startID++}${SPLIT_IDENTIFIER}'+${startKey++}`);
+                element.setAttribute(
+                    `:${attribute}`,
+                    `'${identifier}${startID++}${SPLIT_IDENTIFIER}'+${startKey++}`
+                );
             } else {
                 // 指定了key
-                element.setAttribute(`:${attribute}`, `'${identifier}${startID++}${SPLIT_IDENTIFIER}'+${element.vFor}`);
+                element.setAttribute(
+                    `:${attribute}`,
+                    `'${identifier}${startID++}${SPLIT_IDENTIFIER}'+${element.vFor}`
+                );
             }
             return;
         }
         element.setAttribute(attribute, `${identifier}${startID++}`);
     });
-    return body.innerHTML;
+    return preserveTagCase(htmlText, body.innerHTML);
 }
 
-/**
- * @description 从指定DOM 数组中获取起始属性
- * @param {Array} elements NodeList
- * @param {String} identifier 自增属性标识符
- * @param {String} attribute 属性名
- * @return {Number} idCounter 自增起始属性值
- * */
-function getStartIDFromElements(elements, identifier = '', attribute = 'id') {
-    let idStartCounter = 0;
-    let keyStartCounter = 0;
-    elements.forEach(element => {
-        const id = element.getAttribute(attribute)?.trim();
-        if (id && id.startsWith(identifier)) {
-            const idString = id.replace(identifier, '').trim();
-            const idCount = parseInt(idString);
-            if (!isNaN(idCount)) {
-                idStartCounter = Math.max(idStartCounter, idCount);
+function autoAddAttribute() {
+    try {
+        // 日志满的话，删除一半
+        checkLogFull(config.logs, clearHalfFolder);
+
+        dfsFile(path.join(__dirname, config.path), config.type, (filePath, source) => {
+            const start = Date.now();
+            const fileName = path.parse(filePath).name;
+            const descriptor = parser.parseComponent(source, { pad: true });
+            if (descriptor.template) {
+                descriptor.template.content = addIdToElements(
+                    descriptor.template.content,
+                    config.attribute,
+                    fileName
+                );
+                const templateRegex = /<template\s*[^>]*>[\s\S]*<\/template>/;
+                const generatedSource = source.replace(
+                    templateRegex,
+                    `<template>\n${descriptor.template.content}\n</template>`
+                );
+                fs.writeFileSync(filePath, generatedSource);
             }
-            
-            const keyStringArray = idString.split(SPLIT_IDENTIFIER);
-            const keyCount = parseInt(keyStringArray[1]);
-            if (!isNaN(keyCount)) {
-                keyStartCounter = Math.max(keyStartCounter, keyCount);
-            }
-        }
-    });
-    return {
-        startID: idStartCounter + 1,
-        startKey: keyStartCounter + 1,
-    };
+            const duration = Date.now() - start;
+            console.log(
+                `${filePath.replace(__dirname, '').replaceAll('\\', '/')} Finished ${duration}ms`
+            );
+        });
+    } catch (e) {
+        logger.error(e);
+    }
 }
+
+autoAddAttribute();

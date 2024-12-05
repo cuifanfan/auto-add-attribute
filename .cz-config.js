@@ -2,7 +2,7 @@
  * @Author: cuifan cuifan@isv-tech.com
  * @Date: 2024-11-08 09:41:47
  * @LastEditors: cuifan cuifan@isv-tech.com
- * @LastEditTime: 2024-12-05 14:17:01
+ * @LastEditTime: 2024-12-05 19:10:50
  * @FilePath: .cz-config.js
  * @Description: 这是默认设置,可以在设置》工具》File Description中进行配置
  */
@@ -54,13 +54,7 @@ module.exports = {
             name: '🔧 other: 除以上所有类型外的其他提交',
         },
     ],
-    scopes: [
-        { name: 'leetcode' },
-        { name: 'javascript' },
-        { name: 'typescript' },
-        { name: 'Vue' },
-        { name: 'node' },
-    ],
+    scopes: [],
     // 步骤
     messages: {
         type: '选择一种你的提交类型:',

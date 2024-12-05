@@ -73,7 +73,7 @@ $ npx git-cz
 
 常见类型：
 
--   feat - 新的功能点、新的需求
+-   ~~feat - 新的功能点、新的需求
 -   docs - 刚刚修改了文档：注释、README.md等
 -   style - 不影响代码功能的修改：css样式、代码格式、eslint问题修复等
 -   perf - 代码更改可以提高性能
@@ -82,7 +82,7 @@ $ npx git-cz
 -   build - 影响构建系统或外部依赖项的更改：build、package.json等
 -   ci - 更改 CI 配置文件和脚本：Jenkinsfile等
 -   revert - 代码回滚
--   other - 除以上所有类型外的其他提交
+-   other - 除以上所有类型外的其他提交~~
 
 <img src="./docs/images/commit-msg.png">
 
@@ -118,3 +118,52 @@ $ git config --global core.autocrlf false
 出现这种问题通常是依赖文件没能拷贝进去（无权限访问或者安装到了开发环境）。
 
 ![image-20240924152851751](./docs/images/powershell.png)
+
+### 3. 往 Vue 项目迁移
+
+（1）CommonJS 语法改为 ES Module 
+
+脚手架支持 CommonJS 语法 (如Vite)时，直接将文件后缀从 `.js` 改为 `.cjs` 即可。
+
+脚手架不支持 CommonJS 语法，需手动将 `require`、`__filename`、`__dirname`、`module.exports`等环境变量改为
+ES Module格式。
+
+（2）衡量是否需要日志系统
+
+建议直接去除日志相关内容，比如`log4js`（占用过大）。
+
+（3）Vue3 项目
+
+由于 Vue3 转向了新的编译工具和构建流程，所以`vue-template-complier`需要使用`@vue/compiler-sfc`代替。注意对应获取template API也发生了变化。
+
+```js
+// old
+import parser from 'vue-template-compiler'
+const descriptor = parser.parseComponent(source, { pad: true });
+
+// new
+import parser from '@vue/compiler-sfc'
+const { descriptor } = parser.parse(source, { pad: true });
+```
+
+（4）引入工作流
+
+可在`package.json`中配置自定义命令（如`add-attribute`）进行启动。并与`pre-commit`、`lint-staged`搭配使用。配置文件详见`.lintstagedrc`、`.husky\\pre-commit`
+
+![image-20240924152851751](./docs/images/add-attribute.png)
+
+## Warning
+
+### 1. 命名规范
+
+组件引用命名应遵守**Web组代码规范**，与原生 HTML 标签一致调用本脚本可能会出现引用失败。
+
+```vue
+# wrong 
+import Header from './Header.vue'
+<Header></Header>
+
+# right 
+import BaseHeader from './Header.vue'
+<BaseHeader></BaseHeader>
+```

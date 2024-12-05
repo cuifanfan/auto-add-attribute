@@ -1,0 +1,10 @@
+dist
+.husky
+*.exe
+README.md
+package.json
+pnpm-lock.yaml
+node_modules
+docs
+logs
+.gitignore
