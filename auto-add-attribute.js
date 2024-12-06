@@ -2,7 +2,7 @@
  * @Author: cuifan cuifan@isv-tech.com
  * @Date: 2024-12-04 09:03:09
  * @LastEditors: cuifan cuifan@isv-tech.com
- * @LastEditTime: 2024-12-06 10:06:12
+ * @LastEditTime: 2024-12-06 10:52:10
  * @FilePath: auto-add-attribute.js
  * @Description: 这是默认设置,可以在设置》工具》File Description中进行配置
  */
@@ -223,9 +223,11 @@ function preserveTagCase(originalHtml, processedHtml) {
         }
         return match;
     });
-    let preservedHtml = processedHtml;
+    let preservedHtml = processedHtml.replaceAll(/[=]""|=''/g, '');
     tagMap.forEach((originTag, lowerTag) => {
-        preservedHtml = preservedHtml.replaceAll(lowerTag, originTag);
+        preservedHtml = preservedHtml
+            .replaceAll(`<${lowerTag}`, `<${originTag}`)
+            .replaceAll(`</${lowerTag}`, `</${originTag}`);
     });
     return preservedHtml;
 }

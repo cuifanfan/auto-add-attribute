@@ -20,8 +20,8 @@ import SupportIcon from './icons/IconSupport.vue';
             <span :id="'Test6_' + item">1</span>
             <span :id="'Test7_' + item">1</span>
         </template>
-        <template #icon=""> <DocumentationIcon id="Test8"> </DocumentationIcon></template>
-        <template #heading="">Documentation</template>
+        <template #icon> <DocumentationIcon id="Test8"> </DocumentationIcon></template>
+        <template #heading>Documentation</template>
 
         Vue’s
         <a href="https://vuejs.org/" target="_blank" rel="noopener" id="Test9"
@@ -31,8 +31,8 @@ import SupportIcon from './icons/IconSupport.vue';
     </WelcomeItem>
 
     <WelcomeItem id="Test10">
-        <template #icon=""> <ToolingIcon id="Test11"> </ToolingIcon></template>
-        <template #heading="">Tooling</template>
+        <template #icon> <ToolingIcon id="Test11"> </ToolingIcon></template>
+        <template #heading>Tooling</template>
 
         This project is served and bundled with
         <a href="https://vite.dev/guide/features.html" target="_blank" rel="noopener" id="Test12"
@@ -57,8 +57,8 @@ import SupportIcon from './icons/IconSupport.vue';
     </WelcomeItem>
 
     <WelcomeItem id="Test19">
-        <template #icon=""> <EcosystemIcon id="Test20"> </EcosystemIcon></template>
-        <template #heading="">Ecosystem</template>
+        <template #icon> <EcosystemIcon id="Test20"> </EcosystemIcon></template>
+        <template #heading>Ecosystem</template>
 
         Get official tools and libraries for your project:
         <a href="https://pinia.vuejs.org/" target="_blank" rel="noopener" id="Test21">Pinia</a>,
@@ -77,8 +77,8 @@ import SupportIcon from './icons/IconSupport.vue';
     </WelcomeItem>
 
     <WelcomeItem id="Test26">
-        <template #icon=""> <CommunityIcon id="Test27"> </CommunityIcon></template>
-        <template #heading="">Community</template>
+        <template #icon> <CommunityIcon id="Test27"> </CommunityIcon></template>
+        <template #heading>Community</template>
 
         Got stuck? Ask your question on
         <a href="https://chat.vuejs.org" target="_blank" rel="noopener" id="Test28">Vue Land</a>,
@@ -99,8 +99,8 @@ import SupportIcon from './icons/IconSupport.vue';
     </WelcomeItem>
 
     <WelcomeItem id="Test32">
-        <template #icon=""> <SupportIcon id="Test33"> </SupportIcon></template>
-        <template #heading="">Support Vue</template>
+        <template #icon> <SupportIcon id="Test33"> </SupportIcon></template>
+        <template #heading>Support Vue</template>
 
         As an independent project, Vue relies on community backing for its sustainability. You can
         help us by
