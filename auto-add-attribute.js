@@ -2,7 +2,7 @@
  * @Author: cuifan cuifan@isv-tech.com
  * @Date: 2024-12-04 09:03:09
  * @LastEditors: cuifan cuifan@isv-tech.com
- * @LastEditTime: 2024-12-06 09:55:30
+ * @LastEditTime: 2024-12-06 10:06:12
  * @FilePath: auto-add-attribute.js
  * @Description: 这是默认设置,可以在设置》工具》File Description中进行配置
  */
@@ -312,7 +312,10 @@ function autoAddAttribute() {
             const start = Date.now();
             const fileName = path.parse(filePath).name;
             const dirName = path.basename(path.dirname(filePath));
-            const identifier = fileName === 'Index' && dirName ? dirName : fileName;
+            let identifier = fileName;
+            if (fileName.toLowerCase() === 'index' && dirName) {
+                identifier = `${dirName}Index`;
+            }
             const descriptor = parser.parseComponent(source, { pad: true });
             if (descriptor.template) {
                 descriptor.template.content = addIdToElements(
