@@ -1,39 +1,21 @@
-<script setup>
-import WelcomeItem from './WelcomeItem.vue';
-import DocumentationIcon from './icons/IconDocumentation.vue';
-import ToolingIcon from './icons/IconTooling.vue';
-import EcosystemIcon from './icons/IconEcosystem.vue';
-import CommunityIcon from './icons/IconCommunity.vue';
-import SupportIcon from './icons/IconSupport.vue';
-</script>
-
 <template>
     <WelcomeItem id="Test1">
         <template v-for="item in 8" :key="item">
-            <span :id="'Test2_' + item">1</span>
-            <span :id="'Test3_' + item">1</span>
-            <span :id="'Test4_' + item">1</span>
-        </template>
-
-        <template v-for="item in 8" :key="item">
-            <span :id="'Test5_' + item">1</span>
-            <span :id="'Test6_' + item">1</span>
-            <span :id="'Test7_' + item">1</span>
+            <span :id="'Test35_' + item"></span>
+            <span :id="'Test36_' + item"></span>
+            <span :id="'Test37_' + item"></span>
         </template>
         <template #icon> <DocumentationIcon id="Test8"> </DocumentationIcon></template>
         <template #heading>Documentation</template>
-
         Vue’s
         <a href="https://vuejs.org/" target="_blank" rel="noopener" id="Test9"
             >official documentation</a
         >
         provides you with all information you need to get started.
     </WelcomeItem>
-
     <WelcomeItem id="Test10">
         <template #icon> <ToolingIcon id="Test11"> </ToolingIcon></template>
         <template #heading>Tooling</template>
-
         This project is served and bundled with
         <a href="https://vite.dev/guide/features.html" target="_blank" rel="noopener" id="Test12"
             >Vite</a
@@ -50,16 +32,12 @@ import SupportIcon from './icons/IconSupport.vue';
         <a href="https://on.cypress.io/component" target="_blank" rel="noopener" id="Test16"
             >Cypress Component Testing</a
         >.
-
         <br id="Test17" />
-
         More instructions are available in <code id="Test18">README.md</code>.
     </WelcomeItem>
-
     <WelcomeItem id="Test19">
         <template #icon> <EcosystemIcon id="Test20"> </EcosystemIcon></template>
         <template #heading>Ecosystem</template>
-
         Get official tools and libraries for your project:
         <a href="https://pinia.vuejs.org/" target="_blank" rel="noopener" id="Test21">Pinia</a>,
         <a href="https://router.vuejs.org/" target="_blank" rel="noopener" id="Test22">Vue Router</a
@@ -75,11 +53,9 @@ import SupportIcon from './icons/IconSupport.vue';
         >
         a visit.
     </WelcomeItem>
-
     <WelcomeItem id="Test26">
         <template #icon> <CommunityIcon id="Test27"> </CommunityIcon></template>
         <template #heading>Community</template>
-
         Got stuck? Ask your question on
         <a href="https://chat.vuejs.org" target="_blank" rel="noopener" id="Test28">Vue Land</a>,
         our official Discord server, or
@@ -97,11 +73,9 @@ import SupportIcon from './icons/IconSupport.vue';
         <a href="https://twitter.com/vuejs" target="_blank" rel="noopener" id="Test31">@vuejs</a>
         twitter account for latest news in the Vue world.
     </WelcomeItem>
-
     <WelcomeItem id="Test32">
         <template #icon> <SupportIcon id="Test33"> </SupportIcon></template>
         <template #heading>Support Vue</template>
-
         As an independent project, Vue relies on community backing for its sustainability. You can
         help us by
         <a href="https://vuejs.org/sponsor/" target="_blank" rel="noopener" id="Test34"
@@ -109,3 +83,12 @@ import SupportIcon from './icons/IconSupport.vue';
         >.
     </WelcomeItem>
 </template>
+
+<script setup>
+import WelcomeItem from './WelcomeItem.vue';
+import DocumentationIcon from './icons/IconDocumentation.vue';
+import ToolingIcon from './icons/IconTooling.vue';
+import EcosystemIcon from './icons/IconEcosystem.vue';
+import CommunityIcon from './icons/IconCommunity.vue';
+import SupportIcon from './icons/IconSupport.vue';
+</script>

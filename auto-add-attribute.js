@@ -2,7 +2,7 @@
  * @Author: cuifan cuifan@isv-tech.com
  * @Date: 2024-12-04 09:03:09
  * @LastEditors: cuifan cuifan@isv-tech.com
- * @LastEditTime: 2024-12-06 10:52:10
+ * @LastEditTime: 2024-12-11 11:47:39
  * @FilePath: auto-add-attribute.js
  * @Description: 这是默认设置,可以在设置》工具》File Description中进行配置
  */
@@ -11,11 +11,13 @@ const fs = require('fs');
 const parser = require('vue-template-compiler');
 const { JSDOM } = require('jsdom');
 const path = require('path');
+// const readline = require('readline');
 const log4js = require('log4js');
 
 const config = JSON.parse(fs.readFileSync(path.join(__dirname, './attribute.config.json'), 'utf8'));
 const V_FOR_EMPTY_KEY = 'EMPTY_KEY';
 const SPLIT_IDENTIFIER = '_';
+const TEMPLATE_TAG_NAME = 'TEMPLATE_TAG_NAME';
 const logger = log4js.getLogger();
 log4js.configure({
     replaceConsole: true,
@@ -125,12 +127,68 @@ function dfsFile(filePath, extendName, handler) {
 }
 
 /**
+ * @description 根据标签名判断是否是标准HTML节点
+ * @param {String} tagName 标签名
+ * @return {Boolean}
+ * */
+function isStandardHTMLTag(tagName = '') {
+    // 定义常见的 HTML 标签名列表
+    const htmlTagPattern =
+        /^(?:a|abbr|address|area|article|aside|audio|b|base|bdi|bdo|blockquote|body|br|button|canvas|caption|cite|code|col|colgroup|data|datalist|dd|del|details|dfn|dialog|div|dl|dt|em|embed|fieldset|figcaption|figure|footer|form|h1|h2|h3|h4|h5|h6|head|header|hgroup|hr|html|i|iframe|img|input|ins|kbd|label|legend|li|link|autoAddAttribute|map|mark|meta|meter|nav|noscript|object|ol|optgroup|option|output|p|param|picture|pre|progress|q|rp|rt|ruby|s|samp|script|section|select|slot|small|source|span|strong|style|sub|summary|sup|table|tbody|td|template|textarea|tfoot|th|thead|time|title|tr|track|u|ul|var|video|wbr)$/i;
+    return htmlTagPattern.test(tagName.toLowerCase());
+}
+
+/**
+ * @description 判断标签是否为单标签
+ * @param {HTMLElement} element 标签名
+ * @return {Boolean}
+ * */
+function isVoidElement(element) {
+    const VOID_ELEMENTS = new Set([
+        'AREA',
+        'BASE',
+        'BR',
+        'COL',
+        'EMBED',
+        'HR',
+        'IMG',
+        'INPUT',
+        'LINK',
+        'META',
+        'PARAM',
+        'SOURCE',
+        'TRACK',
+        'WBR',
+    ]);
+    return (
+        element.nodeType === element.ELEMENT_NODE &&
+        VOID_ELEMENTS.has(element.tagName.toUpperCase())
+    );
+}
+
+/**
  * @description 判断是否为template节点
  * @param {HTMLElement} node HTML节点
  * @return {Boolean}
  * */
 function isTemlateNode(node) {
-    return node.tagName.toLowerCase() === 'template';
+    return node.tagName.toUpperCase() === TEMPLATE_TAG_NAME;
+}
+
+/**
+ * @description 处理Template节点
+ * @return {Number} 处理过的innerHTML
+ * */
+function encodeTemplate(htmlText) {
+    return htmlText.replace(/template/g, TEMPLATE_TAG_NAME);
+}
+
+/**
+ * @description 还原Template节点
+ * @return {Number} 还原过的innerHTML
+ * */
+function decodeTemplate(htmlText) {
+    return htmlText.replace(new RegExp(TEMPLATE_TAG_NAME.toLowerCase(), 'g'), 'template');
 }
 
 /**
@@ -157,54 +215,49 @@ function getVForKey(vForNodes) {
  * @description 为v-for生成的节点添加vFor属性，值为key
  * @param {HTMLElement} element HTML节点
  * */
-function handleVForNode(element) {
+function markVForNode(element, handler) {
     if (element.hasAttribute('v-for')) {
-        const vForNodeList = isTemlateNode(element)
-            ? element.content.querySelectorAll('*')
-            : element.querySelectorAll('*');
+        const vForNodeList = element.querySelectorAll('*');
         const vForNodes = [element, ...vForNodeList];
         const key = getVForKey(vForNodes);
         vForNodes.forEach((vForNode) => {
             if (!isTemlateNode(vForNode)) {
-                vForNode.vFor = key;
+                handler && handler(vForNode, key);
             }
         });
     }
 }
 
 /**
- * @description 获取指定节点下所有子节点（包含嵌套的template）
- * @param {HTMLElement} root DOM 节点
- * @return {Array} nodeList 子节点数组
+ * @description 手动拼接获取HTML字符（JSDOM拼接会将空属性赋值为'' 例如 <span cuifan></span> -> <span cuifan=""></span>）
+ * @param {HTMLElement} element 标签名
+ * @return {String}
  * */
-function getAllChildNodes(root) {
-    const nodeList = [];
-    const dfsTemplate = (node) => {
-        const elements = node.querySelectorAll('*');
-        elements.forEach((element) => {
-            // 处理v-for节点
-            handleVForNode(element);
-            if (isTemlateNode(element)) {
-                dfsTemplate(element.content);
-            } else {
-                nodeList.push(element);
-            }
-        });
-    };
-    dfsTemplate(root);
-    return nodeList;
-}
+function serializeElement(element) {
+    if (element.nodeType === element.TEXT_NODE) {
+        return element.nodeValue;
+    }
+    if (element.nodeType === element.COMMENT_NODE) {
+        return `<!--${element.nodeValue}-->`;
+    }
+    const tagName = element.tagName.toLowerCase();
+    let htmlStr = `<${tagName}`;
+    for (const attrName of element.getAttributeNames()) {
+        htmlStr += ` ${attrName}`;
+        const attrValue = element.getAttribute(attrName);
+        if (attrValue !== '') {
+            htmlStr += `="${attrValue}"`;
+        }
+    }
+    htmlStr += isVoidElement(element) ? ' />' : '>';
 
-/**
- * @description 根据标签名判断是否是标准HTML节点
- * @param {String} tagName 标签名
- * @return {Boolean}
- * */
-function isStandardHTMLTag(tagName = '') {
-    // 定义常见的 HTML 标签名列表
-    const htmlTagPattern =
-        /^(?:a|abbr|address|area|article|aside|audio|b|base|bdi|bdo|blockquote|body|br|button|canvas|caption|cite|code|col|colgroup|data|datalist|dd|del|details|dfn|dialog|div|dl|dt|em|embed|fieldset|figcaption|figure|footer|form|h1|h2|h3|h4|h5|h6|head|header|hgroup|hr|html|i|iframe|img|input|ins|kbd|label|legend|li|link|autoAddAttribute|map|mark|meta|meter|nav|noscript|object|ol|optgroup|option|output|p|param|picture|pre|progress|q|rp|rt|ruby|s|samp|script|section|select|slot|small|source|span|strong|style|sub|summary|sup|table|tbody|td|template|textarea|tfoot|th|thead|time|title|tr|track|u|ul|var|video|wbr)$/i;
-    return htmlTagPattern.test(tagName.toLowerCase());
+    for (const childNode of element.childNodes) {
+        htmlStr += serializeElement(childNode);
+    }
+    if (!isVoidElement(element)) {
+        htmlStr += `</${tagName}>`;
+    }
+    return htmlStr;
 }
 
 /**
@@ -223,11 +276,13 @@ function preserveTagCase(originalHtml, processedHtml) {
         }
         return match;
     });
-    let preservedHtml = processedHtml.replaceAll(/[=]""|=''/g, '');
+    let preservedHtml = processedHtml.replace(/<.?body>/g, '');
     tagMap.forEach((originTag, lowerTag) => {
+        const openTagRegex = new RegExp(`<${lowerTag}`, 'g');
+        const closeTagRegex = new RegExp(`</${lowerTag}`, 'g');
         preservedHtml = preservedHtml
-            .replaceAll(`<${lowerTag}`, `<${originTag}`)
-            .replaceAll(`</${lowerTag}`, `</${originTag}`);
+            .replace(openTagRegex, `<${originTag}`)
+            .replace(closeTagRegex, `</${originTag}`);
     });
     return preservedHtml;
 }
@@ -250,7 +305,6 @@ function getStartIDFromElements(elements, identifier = '', attribute = 'id') {
             if (!isNaN(idCount)) {
                 idStartCounter = Math.max(idStartCounter, idCount);
             }
-
             const keyStringArray = idString.split(SPLIT_IDENTIFIER);
             const keyCount = parseInt(keyStringArray[1]);
             if (!isNaN(keyCount)) {
@@ -272,14 +326,29 @@ function getStartIDFromElements(elements, identifier = '', attribute = 'id') {
  * @return {String} 添加之后的HTML文本
  * */
 function addIdToElements(htmlText, attribute = 'id', identifier) {
-    const root = new JSDOM(htmlText);
-    const body = root.window.document.body;
-    const elements = getAllChildNodes(body);
-    let { startID, startKey } = getStartIDFromElements(elements, identifier, attribute);
+    // 处理template节点（非标准dom）
+    const htmlProcessedText = encodeTemplate(htmlText);
 
+    const root = new JSDOM(htmlProcessedText);
+    const body = root.window.document.body;
+    const elements = body.querySelectorAll('*');
+
+    // 标记v-for及其子节点
     elements.forEach((element) => {
-        // 如果存在id和:id
-        if (element.hasAttribute(attribute) || element.hasAttribute(`:${attribute}`)) {
+        markVForNode(element, (vForNode, key) => {
+            vForNode.vFor = key;
+        });
+    });
+
+    // 为每个节点添加id
+    let { startID, startKey } = getStartIDFromElements(elements, identifier, attribute);
+    elements.forEach((element) => {
+        // 如果是template或存在id
+        if (
+            isTemlateNode(element) ||
+            element.hasAttribute(attribute) ||
+            element.hasAttribute(`:${attribute}`)
+        ) {
             return;
         }
         // 被v-for的节点
@@ -301,7 +370,49 @@ function addIdToElements(htmlText, attribute = 'id', identifier) {
         }
         element.setAttribute(attribute, `${identifier}${startID++}`);
     });
-    return preserveTagCase(htmlText, body.innerHTML);
+
+    // 获取innerHTML字符串
+    const innerHTML = preserveTagCase(htmlProcessedText, serializeElement(body));
+    return decodeTemplate(innerHTML);
+}
+
+/**
+ * @description 去除生成的Vue文件各个模块开头的空行
+ * @param {String} str 文本
+ * @return {String}
+ * */
+function removeLeadingEmptyLines(str) {
+    return str.replace(/^(?:\s*[\r\n]+|\/\/\n|\/\/\r\n)+/gm, '');
+}
+
+/**
+ * @description 获取单个Vue模块模板
+ * @param {Object} templateInfo 模板信息
+ * @return {String}
+ * */
+function generateSingleVueTemplate(templateInfo) {
+    if (!templateInfo) return '';
+    let attr = '';
+    for (const key in templateInfo.attrs) {
+        attr += ` ${key}${templateInfo.attrs[key] === true ? '' : `="${templateInfo.attrs[key]}"`}`;
+    }
+    return `<${templateInfo.type}${attr}>\r\n${removeLeadingEmptyLines(templateInfo.content)}\r\n</${templateInfo.type}>\r\n\r\n`;
+}
+
+/**
+ * @description 生成Vue模块模板
+ * @param {Object} descriptor 模板对象
+ * @return {String} Vue模板
+ * */
+function generateVueTemplate(descriptor) {
+    let template = '';
+    template += generateSingleVueTemplate(descriptor.template);
+    template += generateSingleVueTemplate(descriptor.script);
+    template += generateSingleVueTemplate(descriptor.scriptSetup);
+    descriptor.styles.forEach((style) => {
+        template += generateSingleVueTemplate(style);
+    });
+    return template;
 }
 
 function autoAddAttribute() {
@@ -310,6 +421,7 @@ function autoAddAttribute() {
         checkLogFull(config.logs, clearHalfFolder);
 
         const rootPath = path.join(__dirname, config.path);
+        const rootStart = Date.now();
         dfsFile(rootPath, config.type, (filePath, source) => {
             const start = Date.now();
             const fileName = path.parse(filePath).name;
@@ -325,21 +437,35 @@ function autoAddAttribute() {
                     config.attribute,
                     identifier
                 );
-                const templateRegex = /<template\s*[^>]*>[\s\S]*<\/template>/;
-                const generatedSource = source.replace(
-                    templateRegex,
-                    `<template>\n${descriptor.template.content}\n</template>`
+                fs.writeFileSync(filePath, generateVueTemplate(descriptor));
+                console.log(
+                    `${filePath.replace(__dirname, '').replace(/\\/g, '/')} Finished ${Date.now() - start}ms`
                 );
-                fs.writeFileSync(filePath, generatedSource);
             }
-            const duration = Date.now() - start;
-            console.log(
-                `${filePath.replace(__dirname, '').replaceAll('\\', '/')} Finished ${duration}ms`
-            );
         });
+        console.log('Total: ', `${(Date.now() - rootStart) / 1000}s`);
     } catch (e) {
         logger.error(e);
     }
 }
 
 autoAddAttribute();
+
+// const r1 = readline.createInterface({
+//     input: process.stdin,
+//     output: process.stdout,
+// });
+//
+// r1.question('Press enter to exit:\t', () => {
+//     r1.close();
+// });
+//
+// r1.on('close', () => {
+//     process.exit(0);
+// });
+
+// TODO: 适配下列节点
+//  9: 文档节点 (DOCUMENT_NODE)
+//  10: 文档类型节点 (DOCUMENT_TYPE_NODE)
+//  11: 文档片段节点 (DOCUMENT_FRAGMENT_NODE)
+// 写单元测试进行验证
